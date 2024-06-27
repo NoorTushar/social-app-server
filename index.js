@@ -30,7 +30,7 @@ const client = new MongoClient(uri, {
 async function run() {
    try {
       const usersCollection = client.db("social-app").collection("users");
-      const postsCollection = client.db("social-app").collection("users");
+      const postsCollection = client.db("social-app").collection("posts");
 
       /********** JWT Related APIs ************/
 
@@ -88,6 +88,22 @@ async function run() {
 
       app.get("/users", async (req, res) => {
          const result = await usersCollection.find().toArray();
+         res.send(result);
+      });
+
+      /********** Posts Related APIs ************/
+
+      //   get all posts
+      app.get("/posts", async (req, res) => {
+         const result = await postsCollection.find().toArray();
+         res.send(result);
+      });
+
+      // delete a post
+      app.delete("/post/:id", verifyToken, async (req, res) => {
+         const id = req.params.id;
+         const query = { _id: new ObjectId(id) };
+         const result = postsCollection.deleteOne(query);
          res.send(result);
       });
 
