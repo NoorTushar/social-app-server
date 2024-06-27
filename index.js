@@ -95,7 +95,17 @@ async function run() {
 
       //   get all posts
       app.get("/posts", async (req, res) => {
-         const result = await postsCollection.find().toArray();
+         const result = await postsCollection
+            .find()
+            .sort({ postTime: -1 })
+            .toArray();
+         res.send(result);
+      });
+
+      // post a new post
+      app.post("/posts", verifyToken, async (req, res) => {
+         const data = req.body;
+         const result = await postsCollection.insertOne(data);
          res.send(result);
       });
 
