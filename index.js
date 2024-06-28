@@ -109,11 +109,58 @@ async function run() {
          res.send(result);
       });
 
+      // like a post
+
+      app.patch("/posts/like/:id", async (req, res) => {
+         try {
+            const postId = req.params.id;
+            const userEmail = req.body.likedBy;
+
+            // Find the post by ID
+            const post = await postsCollection.findOne({
+               _id: new ObjectId(postId),
+            });
+
+            if (!post) {
+               return res.status(404).send("Post not found");
+            }
+
+            // Initialize likes array if it doesn't exist
+            const likes = post.likes || [];
+
+            // Check if the user's email already exists in the likes array
+            const likedByUser = likes.some(
+               (like) => like.likedBy === userEmail
+            );
+
+            if (likedByUser) {
+               // User already liked the post, remove their like
+               await postsCollection.updateOne(
+                  { _id: new ObjectId(postId) },
+                  { $pull: { likes: { likedBy: userEmail } } }
+               );
+               res.send({ message: "Like removed" });
+            } else {
+               // User hasn't liked the post, add their like
+               await postsCollection.updateOne(
+                  { _id: new ObjectId(postId) },
+                  { $push: { likes: { likedBy: userEmail } } }
+               );
+               res.send({ message: "Post liked" });
+            }
+         } catch (error) {
+            console.error(error);
+            res.status(500).send(
+               "An error occurred while processing the request"
+            );
+         }
+      });
+
       // delete a post
       app.delete("/post/:id", verifyToken, async (req, res) => {
          const id = req.params.id;
          const query = { _id: new ObjectId(id) };
-         const result = postsCollection.deleteOne(query);
+         const result = await postsCollection.deleteOne(query);
          res.send(result);
       });
 
