@@ -109,8 +109,34 @@ async function run() {
          res.send(result);
       });
 
-      // like a post
+      // edit a post
+      app.patch("/posts/edit/:id", async (req, res) => {
+         const id = req.params.id;
+         const { postDescription, postImage } = req.body;
+         const updateFields = { postDescription };
 
+         if (postImage) {
+            updateFields.postImage = postImage;
+         }
+
+         try {
+            const result = await postsCollection.updateOne(
+               { _id: new ObjectId(id) },
+               { $set: updateFields }
+            );
+
+            if (result.modifiedCount === 1) {
+               res.status(200).send("Post updated successfully");
+            } else {
+               res.status(404).send("Post not found");
+            }
+         } catch (error) {
+            console.error(error);
+            res.status(500).send("An error occurred while updating the post");
+         }
+      });
+
+      // like a post
       app.patch("/posts/like/:id", async (req, res) => {
          try {
             const postId = req.params.id;
