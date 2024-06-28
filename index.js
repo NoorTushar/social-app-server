@@ -86,7 +86,7 @@ async function run() {
          res.send(result);
       });
 
-      app.get("/users", async (req, res) => {
+      app.get("/users", verifyToken, async (req, res) => {
          const result = await usersCollection.find().toArray();
          res.send(result);
       });
@@ -99,6 +99,16 @@ async function run() {
             .find()
             .sort({ postTime: -1 })
             .toArray();
+         res.send(result);
+      });
+
+      // get a single post
+
+      app.get("/posts/:id", async (req, res) => {
+         const id = req.params.id;
+         const query = { _id: new ObjectId(id) };
+         const result = await postsCollection.findOne(query);
+
          res.send(result);
       });
 
@@ -179,6 +189,28 @@ async function run() {
             res.status(500).send(
                "An error occurred while processing the request"
             );
+         }
+      });
+
+      // comment on a post
+      app.patch("/posts/comment/:id", async (req, res) => {
+         const id = req.params.id;
+         const commentData = req.body;
+
+         try {
+            const result = await postsCollection.updateOne(
+               { _id: new ObjectId(id) },
+               { $push: { comments: commentData } }
+            );
+
+            if (result.modifiedCount === 1) {
+               res.status(200).send("Comment added successfully");
+            } else {
+               res.status(404).send("Post not found");
+            }
+         } catch (error) {
+            console.error(error);
+            res.status(500).send("An error occurred while adding the comment");
          }
       });
 
